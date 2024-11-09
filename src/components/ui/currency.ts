@@ -1,4 +1,15 @@
-export const currency: Record<string, any> = {
+export const currency: Record<
+  string,
+  {
+    symbol: string;
+    name: string;
+    symbol_native: string;
+    decimal_digits: number;
+    rounding: number;
+    code: string;
+    name_plural: string;
+  }
+> = {
   USD: {
     symbol: "$",
     name: "US Dollar",

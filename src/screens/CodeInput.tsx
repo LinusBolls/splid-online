@@ -11,12 +11,13 @@ export interface CodeInputScreenProps {
   onCodeChange: (code: string) => void;
 }
 export default function CodeInputScreen({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   codeLength = 9,
   code,
   onCodeChange,
 }: CodeInputScreenProps) {
   return (
-    <div className="flex flex-col items-center justify-center w-screen min-h-screen bg-gray-900">
+    <div className="flex items-center justify-center w-screen h-screen">
       <InputOTP
         maxLength={9}
         value={code.toUpperCase()}

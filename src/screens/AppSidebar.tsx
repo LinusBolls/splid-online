@@ -13,8 +13,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { SplidJs } from "splid-js";
-import { StorageGroupMeta } from "@/app/page";
+import { StoredGroup } from "@/useSplidGroups";
 
 export default function AppSidebar() {
   const storageValue =
@@ -22,11 +21,7 @@ export default function AppSidebar() {
       ? null
       : localStorage.getItem("splid:groups");
 
-  const groups: {
-    group: { shortCode: string; objectId: string };
-    groupInfo: SplidJs.GroupInfo;
-    meta: StorageGroupMeta;
-  }[] = storageValue ? JSON.parse(storageValue) : [];
+  const groups: StoredGroup[] = storageValue ? JSON.parse(storageValue) : [];
 
   return (
     <NoSSR>

@@ -20,13 +20,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // @ts-expect-error
-  if (init && !init?.headers?.Cookie) {
+  if (
+    init &&
+    (!init.headers ||
+      Array.isArray(init.headers) ||
+      init.headers instanceof Headers ||
+      !init.headers?.Cookie)
+  ) {
     if (!init.headers) {
       init.headers = {};
     }
-    // @ts-expect-error
-    init.headers.Cookie = req.headers.get("Cookie");
+    if (!Array.isArray(init.headers) && !(init.headers instanceof Headers)) {
+      init.headers.Cookie = req.headers.get("Cookie")!;
+    }
   }
 
   try {
@@ -46,12 +52,12 @@ export async function POST(req: NextRequest) {
     try {
       console.error(
         `[http-proxy] failed to fetch:`,
-        // @ts-ignore
-        JSON.parse(init.body),
+        JSON.parse(init.body as string),
         init.headers
       );
-    } catch (err) {
-      console.error(`[http-proxy] failed to fetch:`, init);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (jsonParseErr) {
+      console.error(`[http-proxy] failed to fetch:`, init, err);
     }
     throw new Error("Failed to fetch");
   }

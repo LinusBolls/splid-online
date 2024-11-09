@@ -1,5 +1,5 @@
 import { SplidJs } from "splid-js";
-import { EntriesTable } from "../src/components/EntriesTable";
+import { EntriesTable } from "@/components/EntriesTable";
 import { ViewEntry } from "@/ViewEntry";
 
 export interface GroupOverviewScreenProps {
