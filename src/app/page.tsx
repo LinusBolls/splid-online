@@ -1,101 +1,141 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { SplidClient, SplidJs } from "splid-js";
+
+import CodeInputScreen from "../../screens/CodeInput";
+import GroupOverviewScreen from "../../screens/GroupOverview";
+import NoSSR from "../components/NoSSR";
+import { ViewEntry } from "@/ViewEntry";
+import { useToast } from "@/hooks/use-toast";
+
+export const fetchProxy: typeof fetch = async (url, init) => {
+  const res = await fetch("/api/http-proxy", {
+    method: "POST",
+    body: JSON.stringify({ url, init }),
+  });
+  return res;
+};
+
+export interface StorageGroupMeta {
+  totalBalance: string;
+  numExpenses: number;
+  numMembers: number;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const codeLength = 9;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  const splid = new SplidClient({ fetch: fetchProxy });
+
+  const [code, setCode] = useState("");
+  const [groupInfo, setGroupInfo] = useState<SplidJs.GroupInfo | null>(null);
+  const [members, setMembers] = useState<SplidJs.Person[] | null>(null);
+  const [entries, setEntries] = useState<SplidJs.Entry[] | null>(null);
+
+  const { toast } = useToast();
+
+  async function saveEntries(newEntries: ViewEntry | ViewEntry[]) {
+    const sachen = Array.isArray(newEntries) ? newEntries : [newEntries];
+
+    setEntries((prev) =>
+      JSON.parse(
+        JSON.stringify(
+          prev!.map((i) => sachen.find((j) => j.id === i.GlobalId)?._raw ?? i)
+        )
+      )
+    );
+    await splid.entry.set(sachen.map((i) => i._raw));
+
+    toast({
+      title: "Changes saved",
+    });
+  }
+
+  useEffect(() => {
+    const storageValue = localStorage.getItem("splid:groups");
+
+    const groups: { group: { shortCode: string; objectId: string } }[] =
+      storageValue ? JSON.parse(storageValue) : [];
+
+    if (code.length < codeLength && groups.length) {
+      setCode(groups[0].group.shortCode);
+    }
+
+    if (code.length < codeLength) return;
+
+    (async () => {
+      const group = await splid.group.getByInviteCode(code);
+
+      group.result.shortCode = code;
+
+      const groupId = group.result.objectId;
+
+      const [groupInfo, members, entries] = await Promise.all([
+        splid.groupInfo.getOneByGroup(groupId),
+        splid.person.getAllByGroup(groupId),
+        splid.entry.getAllByGroup(groupId),
+      ]);
+
+      localStorage.setItem(
+        "splid:groups",
+        JSON.stringify([
+          {
+            group: group.result,
+            groupInfo,
+            meta: {
+              totalBalance: SplidClient.getTotal(
+                SplidClient.getBalance(members, entries, groupInfo)
+              ),
+              numExpenses: SplidClient.dedupeByGlobalId(
+                entries.filter((i) => !i.isPayment && !i.isDeleted)
+              ).length,
+              numMembers: SplidClient.dedupeByGlobalId(
+                members.filter((i) => !i.isDeleted)
+              ).length,
+            } as StorageGroupMeta,
+          },
+        ])
+      );
+
+      // const groupInfo = await splid.groupInfo.getOneByGroup(groupId);
+      // const members = await splid.person.getAllByGroup(groupId);
+      // const entries = await splid.entry.getAllByGroup(groupId);
+
+      setGroupInfo(groupInfo);
+      setMembers(
+        SplidClient.dedupeByGlobalId(members).filter((i) => !i.isDeleted)
+      );
+      setEntries(
+        SplidClient.dedupeByGlobalId(entries).filter((i) => !i.isDeleted)
+      );
+    })();
+  }, [code]);
+
+  if (code.length < codeLength) {
+    return (
+      <NoSSR>
+        <CodeInputScreen
+          codeLength={codeLength}
+          code={code}
+          onCodeChange={setCode}
+        />
+      </NoSSR>
+    );
+  }
+
+  if (groupInfo == null || members == null || entries == null) {
+    return <div>loading...</div>;
+  }
+
+  return (
+    <NoSSR>
+      <GroupOverviewScreen
+        saveEntries={saveEntries}
+        groupInfo={groupInfo}
+        members={members}
+        entries={entries}
+      />
+    </NoSSR>
   );
 }
