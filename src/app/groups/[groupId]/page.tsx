@@ -39,6 +39,7 @@ export default function Page({
       </div>
     );
   }
+  document.title = groupInfo.name + " - Splid";
 
   return (
     <GroupOverviewScreen

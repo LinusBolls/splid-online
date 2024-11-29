@@ -1,6 +1,7 @@
 import { SplidJs } from "splid-js";
 import { EntriesTable } from "@/components/EntriesTable";
 import { ViewEntry } from "@/ViewEntry";
+import Image from "next/image";
 
 export interface GroupOverviewScreenProps {
   groupInfo: SplidJs.GroupInfo;
@@ -28,6 +29,9 @@ export default function GroupOverviewScreen({
       }}
     >
       <h1>{groupInfo.name}</h1>
+      {typeof groupInfo.wallpaperID === "string" && (
+        <Image src={groupInfo.wallpaperID} alt="Group wallpaper" />
+      )}
       <EntriesTable
         saveEntries={saveEntries}
         entries={entries

@@ -16,7 +16,7 @@ export function DatePicker({
   hasClearButton = true,
 }: {
   defaultMonth?: Date;
-  date: Date;
+  date?: Date | null;
   onChange: (date?: Date) => void;
   hasClearButton?: boolean;
 }) {
@@ -48,7 +48,7 @@ export function DatePicker({
       <PopoverContent className="w-auto p-0">
         <Calendar
           mode="single"
-          selected={date}
+          selected={date ?? undefined}
           onSelect={onChange}
           initialFocus
           defaultMonth={defaultMonth}

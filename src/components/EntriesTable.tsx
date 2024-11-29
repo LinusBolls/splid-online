@@ -40,21 +40,17 @@ import {
   TableRow,
 } from "./ui/table";
 import { SplidClient, SplidJs } from "splid-js";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { DatePicker } from "./ui/date-picker";
 import { ViewCategory, ViewEntry } from "@/ViewEntry";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { format } from "date-fns";
 import { CurrencyInput } from "./ui/currency-input";
 import { currency } from "./ui/currency";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+
+import NewExpenseDialog from "./ui/new-expense-dialog";
+import ExpenseCategorySelect from "./ui/expense-category-select";
+import ExpensePayerSelect from "./ui/expense-payer-select";
 
 export const getColumns = (
   categories: ViewCategory[],
@@ -124,26 +120,14 @@ export const getColumns = (
     },
     cell: ({ row }) => {
       return (
-        <Select
+        <ExpensePayerSelect
+          members={members}
           value={row.original.primaryPayer}
           onValueChange={(id) => {
             row.original.setPrimaryPayer(id);
             saveEntries([row.original]);
           }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="None" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {members.map((i) => (
-                <SelectItem value={i.value} key={i.value}>
-                  {i.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        />
       );
     },
   },
@@ -228,7 +212,7 @@ export const getColumns = (
 
       return (
         <DatePicker
-          date={value!}
+          date={value}
           onChange={(date) => {
             row.original.setPurchasedDate(date);
 
@@ -285,50 +269,14 @@ export const getColumns = (
         : undefined;
 
       return (
-        <Select
+        <ExpenseCategorySelect
+          categories={categories}
           value={value}
-          onValueChange={(id) => {
-            row.original.setCategory(categories.find((i) => i.value === id));
+          onValueChange={(value) => {
+            row.original.setCategory(categories.find((i) => i.value === value));
             saveEntries([row.original]);
           }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="None" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {categories
-                .filter((i) => i.isCustom)
-                .map((i) => (
-                  <SelectItem value={i.value} key={i.value}>
-                    {i.title}
-                  </SelectItem>
-                ))}
-            </SelectGroup>
-            {categories.filter((i) => i.isCustom).length ? (
-              <SelectSeparator />
-            ) : null}
-            <SelectGroup>
-              {categories
-                .filter((i) => !i.isCustom)
-                .map((i) => (
-                  <SelectItem value={i.value} key={i.value}>
-                    {i.title}
-                  </SelectItem>
-                ))}
-            </SelectGroup>
-            <SelectSeparator />
-            <button
-              className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent"
-              onClick={async () => {
-                row.original.setCategory(undefined);
-                await saveEntries([row.original]);
-              }}
-            >
-              None
-            </button>
-          </SelectContent>
-        </Select>
+        />
       );
     },
   },
@@ -459,6 +407,25 @@ export function EntriesTable({
           }
           className="max-w-sm"
         />
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">New expense</Button>
+          </DialogTrigger>
+          <NewExpenseDialog
+            members={processedMembers}
+            categories={categories}
+            defaultCurrencyCode={groupInfo.defaultCurrencyCode}
+            currencyRates={Object.entries(groupInfo.currencyRates).map(
+              ([value, factor]) => ({
+                value,
+                factor,
+                isFavorite: ["EUR", "USD"].includes(value),
+                symbol: currency[value]?.symbol ?? "?",
+              })
+            )}
+            onSubmit={() => {}}
+          />
+        </Dialog>
         <div className="flex gap-4">
           {table.getFilteredSelectedRowModel().rows.length > 0 && (
             <Button variant="destructive">Delete</Button>
