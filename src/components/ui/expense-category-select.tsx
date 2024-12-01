@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "./select";
 
-// TODO: "None" button doesn't work
 export default function ExpenseCategorySelect({
   categories,
   value,
@@ -21,7 +20,7 @@ export default function ExpenseCategorySelect({
 }) {
   return (
     <Select
-      value={value}
+      value={value ?? ""}
       onValueChange={(id) =>
         onValueChange(categories.find((i) => i.value === id))
       }
