@@ -23,9 +23,8 @@ export default function Page({
     redirect("/");
   }
 
-  const { groupInfo, members, entries, saveEntries } = useSplidGroup(
-    group?.group.extendedShortCode.slice(0, 9)
-  );
+  const { groupInfo, members, entries, saveEntries, refetchGroupData } =
+    useSplidGroup(group?.group.extendedShortCode.slice(0, 9));
 
   if (groupInfo == null || members == null || entries == null) {
     return (
@@ -47,6 +46,7 @@ export default function Page({
       members={members}
       entries={entries}
       saveEntries={saveEntries}
+      refetchGroupData={refetchGroupData}
     />
   );
 }

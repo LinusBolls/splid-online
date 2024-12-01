@@ -62,11 +62,18 @@ export default function useSplidGroup(code?: string | null) {
     loadGroup(code);
   }, [code]);
 
+  function refetchGroupData() {
+    if (code) {
+      loadGroup(code);
+    }
+  }
+
   return {
     group,
     groupInfo,
     members,
     entries,
     saveEntries,
+    refetchGroupData,
   };
 }

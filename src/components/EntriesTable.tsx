@@ -51,8 +51,10 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import NewExpenseDialog from "./ui/new-expense-dialog";
 import ExpenseCategorySelect from "./ui/expense-category-select";
 import ExpensePayerSelect from "./ui/expense-payer-select";
+import useSplid from "@/useSplidClient";
 
 export const getColumns = (
+  splid: SplidClient,
   categories: ViewCategory[],
   members: { value: string; name: string }[],
   groupInfo: SplidJs.GroupInfo,
@@ -273,7 +275,9 @@ export const getColumns = (
           categories={categories}
           value={value}
           onValueChange={(value) => {
-            row.original.setCategory(categories.find((i) => i.value === value));
+            row.original.setCategory(
+              categories.find((i) => i.value === value?.value)
+            );
             saveEntries([row.original]);
           }}
         />
@@ -295,8 +299,6 @@ export const getColumns = (
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={async () => {
-                const splid = new SplidClient();
-
                 await splid.entry.create(row.original._raw);
 
                 const entry = row.original.getCopy();
@@ -329,11 +331,13 @@ export function EntriesTable({
   members,
   groupInfo,
   saveEntries,
+  refetchGroupData,
 }: {
   entries: ViewEntry[];
   members: SplidJs.Person[];
   groupInfo: SplidJs.GroupInfo;
   saveEntries: (entries: ViewEntry[]) => Promise<void>;
+  refetchGroupData: () => void;
 }) {
   console.time("foo");
 
@@ -364,8 +368,11 @@ export function EntriesTable({
     name: i.name,
   }));
 
+  const splid = useSplid();
+
   const columns = React.useMemo(
-    () => getColumns(categories, processedMembers, groupInfo, saveEntries),
+    () =>
+      getColumns(splid, categories, processedMembers, groupInfo, saveEntries),
     [categories, processedMembers, groupInfo, saveEntries]
   );
 
@@ -396,9 +403,11 @@ export function EntriesTable({
 
   console.timeEnd("foo");
 
+  const [isCreateExpenseOpen, setIsCreateExpenseOpen] = React.useState(false);
+
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 gap-4">
         <Input
           placeholder="Search by title..."
           value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
@@ -407,11 +416,17 @@ export function EntriesTable({
           }
           className="max-w-sm"
         />
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">New expense</Button>
-          </DialogTrigger>
+        <Dialog open={isCreateExpenseOpen}>
+          {/* <DialogTrigger asChild> */}
+          <Button
+            variant="outline"
+            onClick={() => setIsCreateExpenseOpen(true)}
+          >
+            New expense
+          </Button>
+          {/* </DialogTrigger> */}
           <NewExpenseDialog
+            onClose={() => setIsCreateExpenseOpen(false)}
             members={processedMembers}
             categories={categories}
             defaultCurrencyCode={groupInfo.defaultCurrencyCode}
@@ -423,7 +438,48 @@ export function EntriesTable({
                 symbol: currency[value]?.symbol ?? "?",
               })
             )}
-            onSubmit={() => {}}
+            onSubmit={async (entryInput) => {
+              // @ts-expect-error typing will be fixed in an upcoming release of splid-js
+              await splid.entry.create({
+                isDeleted: false,
+                isPayment: false,
+
+                group: {
+                  __type: "Pointer",
+                  className: "_User",
+                  objectId: groupInfo.group.objectId,
+                },
+                title: entryInput.title,
+                items: [
+                  {
+                    T: "",
+                    AM: entryInput.amount,
+                    P: {
+                      P: entryInput.for,
+                      PT: 0,
+                    },
+                  },
+                ],
+                primaryPayer: entryInput.by,
+                category: entryInput.category
+                  ? {
+                      originalName: entryInput.category.title,
+                      type: entryInput.category.isCustom
+                        ? "custom"
+                        : (entryInput.category.value as SplidJs.EntryCategory),
+                    }
+                  : undefined,
+                currencyCode: entryInput.currencyCode,
+                date: entryInput.date
+                  ? {
+                      __type: "Date",
+                      iso: entryInput.date.toISOString(),
+                    }
+                  : undefined,
+                secondaryPayers: {},
+              });
+              refetchGroupData();
+            }}
           />
         </Dialog>
         <div className="flex gap-4">

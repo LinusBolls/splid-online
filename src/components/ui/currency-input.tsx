@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { ReactNode, useRef } from "react";
 
 import { Input } from "./input";
 import {
@@ -41,6 +41,7 @@ export interface CurrencyInputProps {
   onCurrencyCodeChange?: (currencyCode: string) => void;
   currencyCode?: string;
   onSubmit?: () => void;
+  errorMessage?: ReactNode;
 }
 export function CurrencyInput({
   value,
@@ -49,7 +50,10 @@ export function CurrencyInput({
   currencyRates,
   onCurrencyCodeChange,
   onSubmit,
+  errorMessage,
 }: CurrencyInputProps) {
+  const hasError = !!errorMessage;
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const valueStr = new Intl.NumberFormat("de-DE", {
@@ -75,77 +79,82 @@ export function CurrencyInput({
   };
 
   return (
-    <div style={{ position: "relative" }}>
-      <Input
-        className="pr-9"
-        ref={inputRef}
-        value={valueStr}
-        onChange={handleChange}
-        onBlur={onSubmit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") onSubmit?.();
+    <div className="flex flex-col w-[280px]">
+      <div style={{ position: "relative" }}>
+        <Input
+          className={`pr-9 ${
+            hasError ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          ref={inputRef}
+          value={valueStr}
+          onChange={handleChange}
+          onBlur={onSubmit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSubmit?.();
 
-          const isRangeSelected =
-            inputRef.current &&
-            inputRef.current.selectionStart == 0 &&
-            inputRef.current.selectionEnd === valueStr.length;
+            const isRangeSelected =
+              inputRef.current &&
+              inputRef.current.selectionStart == 0 &&
+              inputRef.current.selectionEnd === valueStr.length;
 
-          if (
-            (e.key === "ArrowLeft" || e.key === "ArrowRight") &&
-            !isRangeSelected
-          ) {
-            e.preventDefault();
-          }
-          if (e.key === "ArrowLeft" && isRangeSelected)
-            setTimeout(
-              () =>
-                inputRef.current!.setSelectionRange(
-                  valueStr.length,
-                  valueStr.length
-                ),
-              0
-            );
-        }}
-        onMouseDown={(e) => {
-          if (document.activeElement === inputRef.current) e.preventDefault();
-          else {
-            setTimeout(
-              () => inputRef.current!.setSelectionRange(0, valueStr.length),
-              0
-            );
-          }
-        }}
-        placeholder="0,00"
-      />
-      <Select value={currencyCode} onValueChange={onCurrencyCodeChange}>
-        <SelectTrigger
-          unstyled
-          className="absolute flex items-center justify-center h-full aspect-square right-0 top-0 cursor-pointer font-bold"
-        >
-          €
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {currencyRates
-              .filter((i) => i.isFavorite)
-              .map((i) => (
-                <SelectItem key={i.value} value={i.value}>
-                  {i.symbol} ({i.value})
-                </SelectItem>
-              ))}
-          </SelectGroup>
-          <SelectSeparator />
-          <SelectGroup>
-            {currencyRates
-              .filter((i) => !i.isFavorite)
-              .map((i) => (
-                <SelectItem key={i.value} value={i.value}>
-                  {i.symbol} ({i.value})
-                </SelectItem>
-              ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+            if (
+              (e.key === "ArrowLeft" || e.key === "ArrowRight") &&
+              !isRangeSelected
+            ) {
+              e.preventDefault();
+            }
+            if (e.key === "ArrowLeft" && isRangeSelected)
+              setTimeout(
+                () =>
+                  inputRef.current!.setSelectionRange(
+                    valueStr.length,
+                    valueStr.length
+                  ),
+                0
+              );
+          }}
+          onMouseDown={(e) => {
+            if (document.activeElement === inputRef.current) e.preventDefault();
+            else {
+              setTimeout(
+                () => inputRef.current!.setSelectionRange(0, valueStr.length),
+                0
+              );
+            }
+          }}
+          placeholder="0,00"
+        />
+        <Select value={currencyCode} onValueChange={onCurrencyCodeChange}>
+          <SelectTrigger
+            unstyled
+            className="absolute flex items-center justify-center h-full aspect-square right-0 top-0 cursor-pointer font-bold"
+          >
+            €
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {currencyRates
+                .filter((i) => i.isFavorite)
+                .map((i) => (
+                  <SelectItem key={i.value} value={i.value}>
+                    {i.symbol} ({i.value})
+                  </SelectItem>
+                ))}
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              {currencyRates
+                .filter((i) => !i.isFavorite)
+                .map((i) => (
+                  <SelectItem key={i.value} value={i.value}>
+                    {i.symbol} ({i.value})
+                  </SelectItem>
+                ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+      {hasError && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
     </div>
   );
 }

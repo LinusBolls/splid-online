@@ -8,12 +8,14 @@ export interface GroupOverviewScreenProps {
   members: SplidJs.Person[];
   entries: SplidJs.Entry[];
   saveEntries: (entries: ViewEntry[]) => Promise<void>;
+  refetchGroupData: () => void;
 }
 export default function GroupOverviewScreen({
   groupInfo,
   members,
   entries,
   saveEntries,
+  refetchGroupData,
 }: GroupOverviewScreenProps) {
   return (
     <div
@@ -39,6 +41,7 @@ export default function GroupOverviewScreen({
           .map((i) => new ViewEntry(i))}
         members={members.filter((i) => !i.isDeleted)}
         groupInfo={groupInfo}
+        refetchGroupData={refetchGroupData}
       />
     </div>
   );

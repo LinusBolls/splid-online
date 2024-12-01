@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "./select";
 
+// TODO: "None" button doesn't work
 export default function ExpenseCategorySelect({
   categories,
   value,
@@ -16,10 +17,15 @@ export default function ExpenseCategorySelect({
 }: {
   categories: ViewCategory[];
   value?: string;
-  onValueChange: (value?: string) => void;
+  onValueChange: (value?: ViewCategory) => void;
 }) {
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select
+      value={value}
+      onValueChange={(id) =>
+        onValueChange(categories.find((i) => i.value === id))
+      }
+    >
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="None" />
       </SelectTrigger>
