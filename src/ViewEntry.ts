@@ -1,4 +1,5 @@
 import { SplidJs } from "splid-js";
+import { EntryCategory } from "../../splid-js/dist/mjs/types/entry";
 
 export interface ViewCategory {
   isCustom: boolean;
@@ -252,3 +253,74 @@ export class ViewEntry {
     return this;
   }
 }
+
+export const getMockEntry = (
+  title: string,
+  primaryPayer: string,
+  items: SplidJs.EntryItem[],
+  {
+    category,
+    currencyCode,
+  }: {
+    category?: {
+      originalName: string;
+      type: EntryCategory;
+    };
+    currencyCode?: string;
+  }
+) => {
+  return new ViewEntry({
+    __type: "Object",
+    className: "Entry",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    UpdateID: "#",
+    createdGlobally: {
+      __type: "Date",
+      iso: new Date().toISOString(),
+    },
+    items,
+    objectId: "#",
+    UpdateInstallationID: "#",
+    title,
+    primaryPayer,
+    currencyCode: currencyCode ?? "EUR",
+    GlobalId: "#",
+    group: {
+      __type: "Pointer",
+      className: "_User",
+      objectId: "#",
+    },
+    isDeleted: false,
+    isPayment: false,
+    category,
+  });
+};
+
+export const getMockMember = (
+  id: string,
+  name: string,
+  initials = name[0]
+) => ({
+  name,
+  initials,
+
+  __type: "Object" as const,
+  objectId: "#",
+  className: "Person" as const,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  createdGlobally: {
+    __type: "Date" as const,
+    iso: new Date().toISOString(),
+  },
+  GlobalId: id,
+  group: {
+    __type: "Pointer" as const,
+    className: "_User" as const,
+    objectId: "#",
+  },
+  isDeleted: false,
+  UpdateID: "#",
+  UpdateInstallationID: "#",
+});

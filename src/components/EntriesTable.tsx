@@ -1,6 +1,21 @@
 "use client";
 
-import * as React from "react";
+const getColor = (hue: number) => {
+  return {
+    dark: `hsl(${hue}, 88%, 33%)`,
+    light: `hsl(${hue}, 33%, 80%)`,
+  };
+};
+
+const getColors = (hueDistance: number) => {
+  const colors = [];
+  for (let i = 0; i < 360; i += hueDistance) {
+    colors.push(getColor(i));
+  }
+  return colors;
+};
+
+import React, { useState, useMemo } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -39,26 +54,36 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { SplidClient, SplidJs } from "splid-js";
+import { SplidJs } from "splid-js";
 import { DatePicker } from "./ui/date-picker";
-import { ViewCategory, ViewEntry } from "@/ViewEntry";
+import { ViewCategory, ViewEntry, ViewProfiteer } from "@/ViewEntry";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { format } from "date-fns";
 import { CurrencyInput } from "./ui/currency-input";
 import { currency } from "./ui/currency";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 
-import NewExpenseDialog from "./ui/new-expense-dialog";
+import NewExpenseDialog, { CreateExpenseInput } from "./ui/new-expense-dialog";
 import ExpenseCategorySelect from "./ui/expense-category-select";
 import ExpensePayerSelect from "./ui/expense-payer-select";
-import useSplid from "@/useSplidClient";
+import EntryProfiteers from "./ui/entry-profiteers";
+
+type EntriesTableGroupInfo = Pick<
+  SplidJs.GroupInfo,
+  "defaultCurrencyCode" | "currencyRates" | "customCategories"
+>;
 
 export const getColumns = (
-  splid: SplidClient,
   categories: ViewCategory[],
-  members: { value: string; name: string }[],
-  groupInfo: SplidJs.GroupInfo,
-  saveEntries: (entries: ViewEntry[]) => Promise<void>
+  members: {
+    value: string;
+    name: string;
+    color: { light: string; dark: string };
+  }[],
+  groupInfo: EntriesTableGroupInfo,
+  saveEntries: (entries: ViewEntry[]) => void,
+  onDuplicateEntry: (entry: ViewEntry) => void,
+  onDeleteEntry: (entry: ViewEntry) => void
 ): ColumnDef<ViewEntry>[] => [
   {
     id: "select",
@@ -226,6 +251,32 @@ export const getColumns = (
     },
   },
   {
+    accessorKey: "for",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          For
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const uniqueProfiteers = row.original.items.reduce<ViewProfiteer[]>(
+        (acc, i) =>
+          acc.concat(
+            i.profiteers.filter((j) => !acc.some((k) => k.id === j.id))
+          ),
+        []
+      );
+
+      return (
+        <EntryProfiteers profiteers={uniqueProfiteers} members={members} />
+      );
+    },
+  },
+  {
     accessorKey: "created",
     header: ({ column }) => {
       return (
@@ -297,25 +348,11 @@ export const getColumns = (
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={async () => {
-                await splid.entry.create(row.original._raw);
-
-                const entry = row.original.getCopy();
-
-                await saveEntries([entry]);
-              }}
-            >
+            <DropdownMenuItem onClick={() => onDuplicateEntry(row.original)}>
               <Copy />
               Duplicate
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={async () => {
-                row.original.setIsDeleted(true);
-
-                await saveEntries([row.original]);
-              }}
-            >
+            <DropdownMenuItem onClick={() => onDeleteEntry(row.original)}>
               <Trash2 />
               Delete
             </DropdownMenuItem>
@@ -331,23 +368,26 @@ export function EntriesTable({
   members,
   groupInfo,
   saveEntries,
-  refetchGroupData,
+  onCreateExpense,
+  onDuplicateEntry,
+  onDeleteEntry,
 }: {
   entries: ViewEntry[];
   members: SplidJs.Person[];
-  groupInfo: SplidJs.GroupInfo;
-  saveEntries: (entries: ViewEntry[]) => Promise<void>;
-  refetchGroupData: () => void;
+  groupInfo: EntriesTableGroupInfo;
+  saveEntries: (entries: ViewEntry[]) => void;
+  onCreateExpense: (expense: CreateExpenseInput) => void;
+  onDuplicateEntry: (entry: ViewEntry) => void;
+  onDeleteEntry: (entry: ViewEntry) => void;
 }) {
   console.time("foo");
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [pageIndex, setPageIndex] = useState(0);
+  const [isCreateExpenseOpen, setIsCreateExpenseOpen] = useState(false);
 
   const categories = (groupInfo.customCategories ?? [])
     .map((i) => ({
@@ -366,17 +406,21 @@ export function EntriesTable({
   const processedMembers = members.map((i) => ({
     value: i.GlobalId,
     name: i.name,
+    color: getColors(36)[members.indexOf(i)],
   }));
 
-  const splid = useSplid();
-
-  const columns = React.useMemo(
+  const columns = useMemo(
     () =>
-      getColumns(splid, categories, processedMembers, groupInfo, saveEntries),
+      getColumns(
+        categories,
+        processedMembers,
+        groupInfo,
+        saveEntries,
+        onDuplicateEntry,
+        onDeleteEntry
+      ),
     [categories, processedMembers, groupInfo, saveEntries]
   );
-
-  const [pageIndex, setPageIndex] = React.useState(0);
 
   const table = useReactTable({
     data: entries,
@@ -403,8 +447,6 @@ export function EntriesTable({
 
   console.timeEnd("foo");
 
-  const [isCreateExpenseOpen, setIsCreateExpenseOpen] = React.useState(false);
-
   return (
     <div className="w-full">
       <div className="flex items-center py-4 gap-4">
@@ -417,14 +459,12 @@ export function EntriesTable({
           className="max-w-sm"
         />
         <Dialog open={isCreateExpenseOpen}>
-          {/* <DialogTrigger asChild> */}
           <Button
             variant="outline"
             onClick={() => setIsCreateExpenseOpen(true)}
           >
             New expense
           </Button>
-          {/* </DialogTrigger> */}
           <NewExpenseDialog
             onClose={() => setIsCreateExpenseOpen(false)}
             members={processedMembers}
@@ -438,48 +478,7 @@ export function EntriesTable({
                 symbol: currency[value]?.symbol ?? "?",
               })
             )}
-            onSubmit={async (entryInput) => {
-              // @ts-expect-error typing will be fixed in an upcoming release of splid-js
-              await splid.entry.create({
-                isDeleted: false,
-                isPayment: false,
-
-                group: {
-                  __type: "Pointer",
-                  className: "_User",
-                  objectId: groupInfo.group.objectId,
-                },
-                title: entryInput.title,
-                items: [
-                  {
-                    T: "",
-                    AM: entryInput.amount,
-                    P: {
-                      P: entryInput.for,
-                      PT: 0,
-                    },
-                  },
-                ],
-                primaryPayer: entryInput.by,
-                category: entryInput.category
-                  ? {
-                      originalName: entryInput.category.title,
-                      type: entryInput.category.isCustom
-                        ? "custom"
-                        : (entryInput.category.value as SplidJs.EntryCategory),
-                    }
-                  : undefined,
-                currencyCode: entryInput.currencyCode,
-                date: entryInput.date
-                  ? {
-                      __type: "Date",
-                      iso: entryInput.date.toISOString(),
-                    }
-                  : undefined,
-                secondaryPayers: {},
-              });
-              refetchGroupData();
-            }}
+            onSubmit={onCreateExpense}
           />
         </Dialog>
         <div className="flex gap-4">
