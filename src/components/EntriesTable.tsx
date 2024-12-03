@@ -52,7 +52,8 @@ import NewExpenseDialog, { CreateExpenseInput } from "./ui/new-expense-dialog";
 import ExpenseCategorySelect from "./ui/expense-category-select";
 import ExpensePayerSelect from "./ui/expense-payer-select";
 import EntryProfiteers from "./ui/entry-profiteers";
-import { getRandomAvatarColor } from "./colors";
+import { assignAvatarColors } from "./colors";
+import { MAX_EXPENSE_AMOUNT_EUR } from "@/constants";
 
 type EntriesTableGroupInfo = Pick<
   SplidJs.GroupInfo,
@@ -64,6 +65,7 @@ export const getColumns = (
   members: {
     value: string;
     name: string;
+    initials: string;
     color: { bg: string; fg: string };
   }[],
   groupInfo: EntriesTableGroupInfo,
@@ -181,7 +183,9 @@ export const getColumns = (
       return (
         <CurrencyInput
           value={v}
-          onChange={setV}
+          onChange={(value) => {
+            if (value <= MAX_EXPENSE_AMOUNT_EUR) setV(value);
+          }}
           onSubmit={() => {
             if (v !== row.original.amount) {
               row.original.setAmount(v);
@@ -389,10 +393,11 @@ export function EntriesTable({
       { isCustom: false, value: "transport", title: "Transport" },
     ]);
 
-  const processedMembers = members.map((i, idx) => ({
+  const processedMembers = members.map((i) => ({
     value: i.GlobalId,
     name: i.name,
-    color: getRandomAvatarColor(idx.toString()),
+    initials: i.initials,
+    color: assignAvatarColors(members)[i.GlobalId],
   }));
 
   const columns = useMemo(

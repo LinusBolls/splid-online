@@ -1,3 +1,5 @@
+import { SplidJs } from "splid-js";
+
 /**
  * Deterministically selects a random Map entry based on a seed string.
  * @param {Map} map - The JavaScript Map to access.
@@ -120,4 +122,17 @@ export const AvatarColorMap = new Map([
 
 export const getRandomAvatarColor = (seed: string) => {
   return getRandomMapEntry(AvatarColorMap, seed);
+};
+
+export const assignAvatarColors = (
+  members: SplidJs.Person[]
+): Record<string, { bg: string; fg: string }> => {
+  const record: Record<string, { bg: string; fg: string }> = {};
+
+  for (const [idx, member] of members.entries()) {
+    // TODO: reduce color collision for members with same .initials
+
+    record[member.GlobalId] = getRandomMapEntry(AvatarColorMap, idx.toString());
+  }
+  return record;
 };

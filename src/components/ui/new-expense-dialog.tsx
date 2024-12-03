@@ -17,6 +17,7 @@ import { ScrollArea } from "./scroll-area";
 import { Checkbox } from "./checkbox";
 import { ProfiteerInput } from "./entry-profiteers";
 import { cn } from "@/lib/utils";
+import { MAX_EXPENSE_AMOUNT_EUR } from "@/constants";
 
 export interface CreateExpenseInput {
   title: string;
@@ -119,7 +120,9 @@ export default function NewExpenseDialog({
           <CurrencyInput
             errorMessage={showValidation && amount <= 0 && "Can't be zero"}
             value={amount}
-            onChange={setAmount}
+            onChange={(value) => {
+              if (value <= MAX_EXPENSE_AMOUNT_EUR) setAmount(value);
+            }}
             onSubmit={() => {}}
             currencyRates={currencyRates}
             currencyCode={currencyCode}

@@ -6,24 +6,17 @@ import { useFullInputSelection } from "../useFullInputSelection";
 import { Input } from "./input";
 
 function SplidAvatar({
-  name,
+  initials,
   color,
   className,
   style,
 }: {
-  name?: string;
+  initials?: string;
   color?: { bg: string; fg: string };
   className?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   style?: any;
 }) {
-  const initials =
-    name
-      ?.split(" ")
-      .map((i) => i[0])
-      .join("")
-      .toUpperCase() || "?";
-
   return (
     <div
       className={cn(
@@ -48,6 +41,7 @@ export interface EntryProfiteersProps {
   profiteers: ViewProfiteer[];
   members: {
     name: string;
+    initials: string;
     value: string;
     color: { bg: string; fg: string };
   }[];
@@ -70,7 +64,7 @@ export default function EntryProfiteers({
             return (
               <SplidAvatar
                 key={i.id}
-                name={member?.name}
+                initials={member?.initials}
                 color={member?.color}
               />
             );
@@ -82,7 +76,7 @@ export default function EntryProfiteers({
 
           return (
             <div key={i.id} className="flex items-center h-8">
-              <SplidAvatar name={member?.name} color={member?.color} />
+              <SplidAvatar initials={member?.initials} color={member?.color} />
               <div className="text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis ml-2">
                 {member?.name || "Unknown"}
               </div>
