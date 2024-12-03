@@ -18,6 +18,7 @@ import { Checkbox } from "./checkbox";
 import { ProfiteerInput } from "./entry-profiteers";
 import { cn } from "@/lib/utils";
 import { MAX_EXPENSE_AMOUNT_EUR } from "@/constants";
+import { useProfiteers } from "../useProfiteers";
 
 export interface CreateExpenseInput {
   title: string;
@@ -51,13 +52,17 @@ export default function NewExpenseDialog({
   const [currencyCode, setCurrencyCode] = useState<string>(defaultCurrencyCode);
   const [date, setDate] = useState<Date | undefined>(new Date());
 
-  const [profiteers, setProfiteers] = useState<{ id: string; share: number }[]>(
-    []
-  );
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showValidation, setShowValidation] = useState(false);
+
+  const {
+    profiteers,
+    removeProfiteer,
+    addProfiteer,
+    setProfiteerPercentage,
+    setProfiteerAmount,
+  } = useProfiteers(amount);
 
   const actualProfiteers = profiteers.length
     ? profiteers
@@ -182,30 +187,9 @@ export default function NewExpenseDialog({
                     )}
                     onClick={() => {
                       if (isChecked) {
-                        const numProfiteerss = profiteers.length - 1;
-
-                        const shareToAdd = profiteer!.share;
-
-                        setProfiteers(
-                          profiteers
-                            .filter((j) => j.id !== i.value)
-                            .map((i) => ({
-                              ...i,
-                              share: i.share + shareToAdd / numProfiteerss,
-                            }))
-                        );
+                        removeProfiteer(i.value);
                       } else {
-                        const numProfiteerss = profiteers.length + 1;
-
-                        const shareToAdd = 1 / numProfiteerss;
-
-                        setProfiteers([
-                          ...profiteers.map((i) => ({
-                            ...i,
-                            share: i.share - shareToAdd / profiteers.length,
-                          })),
-                          { id: i.value, share: shareToAdd },
-                        ]);
+                        addProfiteer(i.value);
                       }
                     }}
                   >
@@ -223,36 +207,10 @@ export default function NewExpenseDialog({
                         percentage={profiteer.share}
                         amount={amount * profiteer.share}
                         onPercentageChange={(value) => {
-                          if (value > 100) return;
-
-                          const shareToAdd = value / 100 - profiteer.share;
-
-                          setProfiteers(
-                            profiteers.map((j) => ({
-                              ...j,
-                              share:
-                                j.id === i.value
-                                  ? j.share + shareToAdd
-                                  : j.share -
-                                    shareToAdd / (profiteers.length - 1),
-                            }))
-                          );
+                          setProfiteerPercentage(i.value, value);
                         }}
                         onAmountChange={(value) => {
-                          if (value > amount) return;
-
-                          const shareToAdd = value / amount - profiteer.share;
-
-                          setProfiteers(
-                            profiteers.map((j) => ({
-                              ...j,
-                              share:
-                                j.id === i.value
-                                  ? j.share + shareToAdd
-                                  : j.share -
-                                    shareToAdd / (profiteers.length - 1),
-                            }))
-                          );
+                          setProfiteerAmount(i.value, value);
                         }}
                       />
                     )}
