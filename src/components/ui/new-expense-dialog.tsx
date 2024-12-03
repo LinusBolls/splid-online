@@ -159,7 +159,6 @@ export default function NewExpenseDialog({
           </Label>
           <ScrollArea className="h-60 w-[280px] rounded-md border">
             <div className="p-4">
-              {/* <h4 className="mb-4 text-sm font-medium leading-none">For</h4> */}
               {members.map((i, idx) => {
                 const profiteer = actualProfiteers.find(
                   (j) => j.id === i.value
@@ -182,15 +181,14 @@ export default function NewExpenseDialog({
                       if (isChecked) {
                         const numProfiteerss = profiteers.length - 1;
 
-                        const shareToDistribute = profiteer!.share;
+                        const shareToAdd = profiteer!.share;
 
                         setProfiteers(
                           profiteers
                             .filter((j) => j.id !== i.value)
                             .map((i) => ({
                               ...i,
-                              share:
-                                i.share + shareToDistribute / numProfiteerss,
+                              share: i.share + shareToAdd / numProfiteerss,
                             }))
                         );
                       } else {
@@ -212,9 +210,13 @@ export default function NewExpenseDialog({
                       id={i.value + "__newExpense"}
                       checked={isChecked}
                     />
-                    <div className="text-sm select-none">{i.name}</div>
+                    <div className="text-sm select-none flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {i.name}
+                    </div>
                     {profits && (
                       <ProfiteerInput
+                        disabled={!isChecked}
+                        totalAmount={amount}
                         percentage={profiteer.share}
                         amount={amount * profiteer.share}
                         onPercentageChange={(value) => {

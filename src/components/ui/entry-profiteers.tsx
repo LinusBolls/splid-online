@@ -3,6 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card";
 import { cn } from "@/lib/utils";
 import { useCurrencyInput } from "../useCurrencyInput";
 import { useFullInputSelection } from "../useFullInputSelection";
+import { Input } from "./input";
 
 function SplidAvatar({
   name,
@@ -75,14 +76,16 @@ export default function EntryProfiteers({
             );
           })}
       </HoverCardTrigger>
-      <HoverCardContent className="flex flex-col">
+      <HoverCardContent className="flex flex-col w-72">
         {profiteers.map((i) => {
           const member = members.find((j) => j.value === i.id);
 
           return (
             <div key={i.id} className="flex items-center">
               <SplidAvatar name={member?.name} color={member?.color} />
-              <div className="ml-2">{member?.name || "Unknown"}</div>
+              <div className="text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis ml-2">
+                {member?.name || "Unknown"}
+              </div>
               <ProfiteerInput
                 percentage={i.share}
                 amount={i.amount}
@@ -98,12 +101,15 @@ export default function EntryProfiteers({
 }
 
 export function ProfiteerInput({
+  totalAmount,
   percentage,
   amount,
 
   onPercentageChange,
   onAmountChange,
+  disabled = false,
 }: {
+  totalAmount?: number;
   percentage: number;
   amount: number;
 
@@ -111,6 +117,7 @@ export function ProfiteerInput({
   onAmountChange: (value: number) => void;
 
   format?: Intl.NumberFormat;
+  disabled?: boolean;
 }) {
   const currencyFormat = new Intl.NumberFormat("de-DE", {
     minimumFractionDigits: 2,
@@ -128,9 +135,15 @@ export function ProfiteerInput({
   });
 
   return (
-    <div className="flex h-6 ml-auto rounded-sm overflow-hidden font-normal w-fit">
-      <input
-        className="pl-1 pr-1 pt-0.5 pb-0.5 bg-gray-100 border-l-2 border-white text-gray-700 h-6 w-14 focus:outline-none"
+    <div className={"flex h-6 ml-auto font-normal w-fit gap-0.5"}>
+      <Input
+        disabled={disabled}
+        size={percentageFormat.format(1).length}
+        className={cn(
+          "pl-1 pr-1 pt-0.5 pb-0.5 h-6 focus:outline-none rounded-t-sm rounded-l-sm rounded-r-none rounded-b-sm",
+          disabled &&
+            "border-transparent shadow-none disabled:opacity-100 disabled:cursor-text"
+        )}
         onClick={(e) => e.stopPropagation()}
         style={{
           color: "#FF9700",
@@ -140,8 +153,14 @@ export function ProfiteerInput({
         {...useCurrencyInput(percentage, onPercentageChange, percentageFormat)}
         {...useFullInputSelection(() => {})}
       />
-      <input
-        className="pl-1 pr-1 pt-0.5 pb-0.5 bg-gray-100 border-l-2 border-white text-gray-700 h-6 w-14 focus:outline-none"
+      <Input
+        disabled={disabled}
+        size={totalAmount ? currencyFormat.format(totalAmount).length : 9}
+        className={cn(
+          "pl-1 pr-1 pt-0.5 pb-0.5 h-6 focus:outline-none rounded-t-sm rounded-l-none rounded-r-sm rounded-b-sm",
+          disabled &&
+            "border-transparent shadow-none disabled:opacity-100 disabled:cursor-text"
+        )}
         onClick={(e) => e.stopPropagation()}
         {...useCurrencyInput(amount, onAmountChange, currencyFormat)}
         {...useFullInputSelection(() => {})}
