@@ -12,7 +12,7 @@ function SplidAvatar({
   style,
 }: {
   name?: string;
-  color?: { dark: string; light: string };
+  color?: { bg: string; fg: string };
   className?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   style?: any;
@@ -33,8 +33,8 @@ function SplidAvatar({
       style={{
         marginLeft: "-0.5rem",
 
-        background: color?.light ?? "gray",
-        color: color?.dark ?? "darkgray",
+        background: color?.bg ?? "#D7D7D9",
+        color: color?.fg ?? "#5C5C5C",
 
         ...(style ?? {}),
       }}
@@ -49,7 +49,7 @@ export interface EntryProfiteersProps {
   members: {
     name: string;
     value: string;
-    color: { dark: string; light: string };
+    color: { bg: string; fg: string };
   }[];
 }
 export default function EntryProfiteers({
@@ -81,7 +81,7 @@ export default function EntryProfiteers({
           const member = members.find((j) => j.value === i.id);
 
           return (
-            <div key={i.id} className="flex items-center">
+            <div key={i.id} className="flex items-center h-8">
               <SplidAvatar name={member?.name} color={member?.color} />
               <div className="text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis ml-2">
                 {member?.name || "Unknown"}

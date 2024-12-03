@@ -1,20 +1,5 @@
 "use client";
 
-const getColor = (hue: number) => {
-  return {
-    dark: `hsl(${hue}, 88%, 33%)`,
-    light: `hsl(${hue}, 33%, 80%)`,
-  };
-};
-
-const getColors = (hueDistance: number) => {
-  const colors = [];
-  for (let i = 0; i < 360; i += hueDistance) {
-    colors.push(getColor(i));
-  }
-  return colors;
-};
-
 import React, { useState, useMemo } from "react";
 import {
   ColumnDef,
@@ -67,6 +52,7 @@ import NewExpenseDialog, { CreateExpenseInput } from "./ui/new-expense-dialog";
 import ExpenseCategorySelect from "./ui/expense-category-select";
 import ExpensePayerSelect from "./ui/expense-payer-select";
 import EntryProfiteers from "./ui/entry-profiteers";
+import { getRandomAvatarColor } from "./colors";
 
 type EntriesTableGroupInfo = Pick<
   SplidJs.GroupInfo,
@@ -78,7 +64,7 @@ export const getColumns = (
   members: {
     value: string;
     name: string;
-    color: { light: string; dark: string };
+    color: { bg: string; fg: string };
   }[],
   groupInfo: EntriesTableGroupInfo,
   saveEntries: (entries: ViewEntry[]) => void,
@@ -403,10 +389,10 @@ export function EntriesTable({
       { isCustom: false, value: "transport", title: "Transport" },
     ]);
 
-  const processedMembers = members.map((i) => ({
+  const processedMembers = members.map((i, idx) => ({
     value: i.GlobalId,
     name: i.name,
-    color: getColors(36)[members.indexOf(i)],
+    color: getRandomAvatarColor(idx.toString()),
   }));
 
   const columns = useMemo(
