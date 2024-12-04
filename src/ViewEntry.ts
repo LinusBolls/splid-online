@@ -1,5 +1,4 @@
 import { SplidJs } from "splid-js";
-import { EntryCategory } from "../../splid-js/dist/mjs/types/entry";
 
 export interface ViewCategory {
   isCustom: boolean;
@@ -264,7 +263,7 @@ export const getMockEntry = (
   }: {
     category?: {
       originalName: string;
-      type: EntryCategory;
+      type: string;
     };
     currencyCode?: string;
   }
@@ -293,7 +292,7 @@ export const getMockEntry = (
     },
     isDeleted: false,
     isPayment: false,
-    category,
+    category: category as SplidJs.Entry["category"],
   });
 };
 

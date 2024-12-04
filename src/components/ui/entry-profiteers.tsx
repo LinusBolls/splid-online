@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useCurrencyInput } from "../useCurrencyInput";
 import { useFullInputSelection } from "../useFullInputSelection";
 import { Input } from "./input";
+import { MAX_DISPLAYED_EXPENSE_PROFITEERS } from "@/constants";
 
 function SplidAvatar({
   initials,
@@ -20,7 +21,7 @@ function SplidAvatar({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-full w-7 aspect-square border border-white font-semibold text-xs",
+        "flex items-center justify-center rounded-full w-7 h-7 flex-shrink-0 border border-white font-semibold text-xs",
         className
       )}
       style={{
@@ -52,12 +53,18 @@ export default function EntryProfiteers({
 }: EntryProfiteersProps) {
   const allProfit = profiteers.length === members.length;
 
+  const isTruncated = profiteers.length > MAX_DISPLAYED_EXPENSE_PROFITEERS;
+
   return (
     <HoverCard openDelay={0} closeDelay={0}>
-      <HoverCardTrigger className="flex">
-        {allProfit && <div>Everyone</div>}
+      <HoverCardTrigger className="flex items-center justify-center">
+        {allProfit && <div className="whitespace-nowrap">Everyone</div>}
+        {!allProfit && isTruncated && (
+          <div className="whitespace-nowrap">{profiteers.length} people</div>
+        )}
 
         {!allProfit &&
+          !isTruncated &&
           profiteers.map((i) => {
             const member = members.find((j) => j.value === i.id);
 

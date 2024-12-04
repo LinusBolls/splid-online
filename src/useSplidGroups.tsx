@@ -34,6 +34,7 @@ export default function useSplidGroups() {
     localStorage.setItem(
       "splid:groups",
       JSON.stringify([
+        ...groups.filter((i) => i.group.objectId !== group.group.objectId),
         {
           group: group.group,
           groupInfo: group.groupInfo,

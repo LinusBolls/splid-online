@@ -1,6 +1,5 @@
 "use client";
 
-import { Clipboard, Check } from "lucide-react";
 import NoSSR from "@/components/NoSSR";
 import {
   Sidebar,
@@ -8,12 +7,15 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { StoredGroup } from "@/useSplidGroups";
+import { cn } from "@/lib/utils";
 
 export default function AppSidebar() {
   const storageValue =
@@ -26,45 +28,66 @@ export default function AppSidebar() {
   return (
     <NoSSR>
       <Sidebar>
+        <SidebarHeader>
+          <SidebarTrigger className="ml-auto" />
+        </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Your groups</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {groups.map((item) => (
-                  <SidebarMenuItem key={item.group.objectId}>
-                    <SidebarMenuButton asChild>
-                      <Link href={"/groups/" + item.group.objectId}>
-                        {item.meta.totalBalance === "0.00" ||
-                        item.meta.totalBalance === "-0.00" ? (
-                          <Check />
-                        ) : (
-                          <Clipboard />
-                        )}
-                        <div
-                          style={{ display: "flex", flexDirection: "column" }}
-                        >
-                          <div>
-                            <span>
-                              {item.groupInfo.name || "Unknown group"}
-                            </span>
-                            <span style={{ whiteSpace: "nowrap" }}>
-                              {item.meta.totalBalance} €
-                            </span>
+                {groups.map((group) => {
+                  if (!group.meta) return null;
+
+                  const isNeutralBalance = ["-0.00", "0.00"].includes(
+                    group.meta.totalBalance
+                  );
+
+                  return (
+                    <SidebarMenuItem key={group.group.objectId}>
+                      <SidebarMenuButton asChild className="h-fit">
+                        <Link href={"/groups/" + group.group.objectId}>
+                          {/* {isNeutralBalance ? <Check /> : <Clipboard />} */}
+                          <div className="flex flex-col">
+                            <div>
+                              <span
+                                className={cn(
+                                  "whitespace-nowrap font-bold mr-2",
+                                  isNeutralBalance
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                )}
+                              >
+                                {group.meta.totalBalance} €
+                              </span>
+                              <span>
+                                {group.groupInfo.name || "Unknown group"}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {group.meta.numMembers} members ·{" "}
+                              {group.meta.numExpenses} expenses
+                            </div>
                           </div>
-                          <span>
-                            {item.meta.numMembers} members,{" "}
-                            {item.meta.numExpenses} items
-                          </span>
-                        </div>
-                      </Link>
-                      {/* <a href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </a> */}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                        </Link>
+                        {/* <a href={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </a> */}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/groups/join">Join a group</Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/groups/new">Create a group</Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

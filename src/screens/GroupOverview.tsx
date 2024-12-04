@@ -61,16 +61,7 @@ export default function GroupOverviewScreen({
     .map((i) => new ViewEntry(i));
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        padding: "1rem",
-        paddingTop: 0,
-      }}
-    >
-      <h1>{groupInfo.name}</h1>
+    <div className="flex flex-col pl-4 pr-4 h-full">
       {/* {typeof groupInfo.wallpaperID === "string" && 
         // TODO: whats the wallpaper base url?
         <Image src={groupInfo.wallpaperID} alt="Group wallpaper" />

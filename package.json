@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest",
     "ci:build": "npm run build",
-    "ci:test": "npm run test",
+    "ci:test": "start-server-and-test dev http://localhost:3000; npm run test",
     "ci:lint": "npm run lint"
   },
   "dependencies": {
@@ -49,6 +49,8 @@
     "eslint-config-next": "15.0.2",
     "jsdom": "^25.0.1",
     "postcss": "^8",
+    "puppeteer": "^23.10.0",
+    "start-server-and-test": "^2.0.8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "vitest": "^2.1.8"

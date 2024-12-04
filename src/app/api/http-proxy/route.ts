@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const HOSTNAME_WHITELIST = ["splid.herokuapp.com"];
+const HOSTNAME_WHITELIST = [
+  "splid.herokuapp.com",
+  "splidfiles.s3.amazonaws.com",
+];
 
 export async function POST(req: NextRequest) {
   const body: { url: string; init: RequestInit } = await req.json();
@@ -37,6 +40,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const fetchRes = await fetch(url, init);
+
+    const isJson =
+      fetchRes.headers instanceof Headers
+        ? fetchRes.headers.get("Content-Type")?.includes("application/json")
+        : // @ts-expect-error header types are weird
+          fetchRes.headers["Content-Type"]?.includes("application/json");
+
+    if (!isJson) return fetchRes;
 
     const data = await fetchRes.json();
 

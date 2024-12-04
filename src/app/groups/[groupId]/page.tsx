@@ -7,6 +7,7 @@ import GroupOverviewScreen from "@/screens/GroupOverview";
 import useSplidGroup from "@/useSplidGroup";
 import useSplidGroups from "@/useSplidGroups";
 import { redirect } from "next/navigation";
+import { GroupHeader } from "@/components/GroupHeader";
 
 export default function Page({
   params,
@@ -38,15 +39,20 @@ export default function Page({
       </div>
     );
   }
-  document.title = groupInfo.name + " - Splid";
+  if (groupInfo.name) {
+    document.title = groupInfo.name + " - Splid";
+  }
 
   return (
-    <GroupOverviewScreen
-      groupInfo={groupInfo}
-      members={members}
-      entries={entries}
-      saveEntries={saveEntries}
-      refetchGroupData={refetchGroupData}
-    />
+    <div className="flex flex-col min-h-screen">
+      <GroupHeader group={group} />
+      <GroupOverviewScreen
+        groupInfo={groupInfo}
+        members={members}
+        entries={entries}
+        saveEntries={saveEntries}
+        refetchGroupData={refetchGroupData}
+      />
+    </div>
   );
 }

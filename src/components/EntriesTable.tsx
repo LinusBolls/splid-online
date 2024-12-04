@@ -53,7 +53,7 @@ import ExpenseCategorySelect from "./ui/expense-category-select";
 import ExpensePayerSelect from "./ui/expense-payer-select";
 import EntryProfiteers from "./ui/entry-profiteers";
 import { assignAvatarColors } from "./colors";
-import { MAX_EXPENSE_AMOUNT_EUR } from "@/constants";
+import { MAX_EXPENSE_AMOUNT_EUR, NUM_ENTRY_TABLE_ROWS } from "@/constants";
 
 type EntriesTableGroupInfo = Pick<
   SplidJs.GroupInfo,
@@ -370,8 +370,6 @@ export function EntriesTable({
   onDuplicateEntry: (entry: ViewEntry) => void;
   onDeleteEntry: (entry: ViewEntry) => void;
 }) {
-  console.time("foo");
-
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -431,15 +429,13 @@ export function EntriesTable({
       rowSelection,
       pagination: {
         pageIndex,
-        pageSize: 12,
+        pageSize: NUM_ENTRY_TABLE_ROWS,
       },
     },
   });
 
-  console.timeEnd("foo");
-
   return (
-    <div className="w-full">
+    <div className="flex flex-col h-full">
       <div className="flex items-center py-4 gap-4">
         <Input
           placeholder="Search by title..."
@@ -554,7 +550,7 @@ export function EntriesTable({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
+      <div className="flex items-center justify-end space-x-2 py-4 mt-auto">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.

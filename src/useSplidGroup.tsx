@@ -16,6 +16,7 @@ export default function useSplidGroup(code?: string | null) {
   const [groupInfo, setGroupInfo] = useState<SplidJs.GroupInfo | null>(null);
   const [members, setMembers] = useState<SplidJs.Person[] | null>(null);
   const [entries, setEntries] = useState<SplidJs.Entry[] | null>(null);
+  const [wallpaperURL, setWallpaperURL] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -54,6 +55,12 @@ export default function useSplidGroup(code?: string | null) {
     setEntries(
       SplidClient.dedupeByGlobalId(entries).filter((i) => !i.isDeleted)
     );
+
+    if (typeof groupInfo.wallpaperID === "string") {
+      const blob = await splid.file.getBlob(groupInfo.wallpaperID);
+
+      setWallpaperURL(URL.createObjectURL(blob));
+    }
   }
 
   useEffect(() => {
@@ -69,6 +76,7 @@ export default function useSplidGroup(code?: string | null) {
   }
 
   return {
+    wallpaperURL,
     group,
     groupInfo,
     members,
