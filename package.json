@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest",
     "ci:build": "npm run build",
-    "ci:test": "start-server-and-test dev http://localhost:3000; npm run test",
+    "ci:test": "start-server-and-test dev http://localhost:3000 test",
     "ci:lint": "npm run lint"
   },
   "dependencies": {
