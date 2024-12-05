@@ -138,6 +138,7 @@ export function ProfiteerInput({
   return (
     <div className={"flex h-6 ml-auto font-normal w-fit gap-0.5"}>
       <Input
+        id="entry-profiteer--share"
         disabled={disabled}
         size={percentageFormat.format(1).length}
         className={cn(
@@ -155,6 +156,7 @@ export function ProfiteerInput({
         {...useFullInputSelection(() => {})}
       />
       <Input
+        id="entry-profiteer--amount"
         disabled={disabled}
         size={totalAmount ? currencyFormat.format(totalAmount).length : 9}
         className={cn(

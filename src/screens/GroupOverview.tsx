@@ -109,8 +109,8 @@ export default function GroupOverviewScreen({
           }}
           saveEntries={() => {}}
           onCreateExpense={() => {}}
-          onDeleteEntry={() => {}}
-          onDuplicateEntry={() => {}}
+          onDeleteEntries={() => {}}
+          onDuplicateEntries={() => {}}
         />
       ) : (
         <EntriesTable
@@ -119,17 +119,19 @@ export default function GroupOverviewScreen({
           members={members}
           groupInfo={groupInfo}
           onCreateExpense={onCreateExpense}
-          onDeleteEntry={async (entry) => {
-            entry.setIsDeleted(true);
-
-            await saveEntries([entry]);
+          onDeleteEntries={async (entries) => {
+            for (const entry of entries) {
+              entry.setIsDeleted(true);
+            }
+            await saveEntries(entries);
           }}
-          onDuplicateEntry={async (entry) => {
-            await splid.entry.create(entry._raw);
+          onDuplicateEntries={async (entries) => {
+            await splid.batch((b) =>
+              entries.map((entry) => b.entry.create(entry._raw))
+            );
+            const entryCopies = entries.map((entry) => entry.getCopy());
 
-            const entryCopy = entry.getCopy();
-
-            await saveEntries([entryCopy]);
+            await saveEntries(entryCopies);
           }}
         />
       )}

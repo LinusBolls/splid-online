@@ -14,11 +14,13 @@ export function DatePicker({
   onChange,
   defaultMonth = new Date(),
   hasClearButton = true,
+  ...rest
 }: {
   defaultMonth?: Date;
   date?: Date | null;
   onChange: (date?: Date) => void;
   hasClearButton?: boolean;
+  id?: string;
 }) {
   return (
     <Popover>
@@ -34,6 +36,8 @@ export function DatePicker({
         )}
         <PopoverTrigger asChild>
           <Button
+            {...rest}
+            value={date ? format(date, "yyyy-MM-dd") : ""}
             variant="outline"
             className={cn(
               "w-[280px] justify-start text-left font-normal",

@@ -22,7 +22,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {hasError && (
-          <p className="text-sm text-red-500 mt-1">{errorMessage}</p>
+          <p
+            className="text-sm text-red-500 mt-1"
+            role="alert"
+            aria-live="polite"
+          >
+            {errorMessage}
+          </p>
         )}
       </div>
     );

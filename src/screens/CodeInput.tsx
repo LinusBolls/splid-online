@@ -22,6 +22,7 @@ export default function CodeInputScreen({
         maxLength={9}
         value={code.toUpperCase()}
         onChange={onCodeChange}
+        data-testid="join-group-input"
       >
         <InputOTPGroup>
           <InputOTPSlot index={0} />

@@ -87,6 +87,13 @@ export default function NewExpenseDialog({
           date,
           for: forRecord,
         });
+        setTitle("");
+        setCategory(undefined);
+        setBy(undefined);
+        setAmount(0);
+        setCurrencyCode(defaultCurrencyCode);
+        setDate(new Date());
+        setShowValidation(false);
         onClose();
       } catch (err) {
         alert(err);
@@ -105,10 +112,11 @@ export default function NewExpenseDialog({
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="title" className="text-right">
+          <Label htmlFor="new-expense__title" className="text-right">
             Title
           </Label>
           <Input
+            id="new-expense__title"
             value={title}
             className="col-span-3"
             placeholder="Title*"
@@ -119,10 +127,11 @@ export default function NewExpenseDialog({
           />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="amount" className="text-right">
+          <Label htmlFor="new-expense__amount" className="text-right">
             Amount
           </Label>
           <CurrencyInput
+            id="new-expense__amount"
             errorMessage={showValidation && amount <= 0 && "Can't be zero"}
             value={amount}
             onChange={(value) => {
@@ -135,26 +144,28 @@ export default function NewExpenseDialog({
           />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="category" className="text-right">
+          <Label htmlFor="new-expense__category" className="text-right">
             Category
           </Label>
           <ExpenseCategorySelect
+            id="new-expense__category"
             categories={categories}
             value={category?.value}
             onValueChange={setCategory}
           />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="date" className="text-right">
+          <Label htmlFor="new-expense__date" className="text-right">
             Date
           </Label>
-          <DatePicker date={date} onChange={setDate} />
+          <DatePicker id="new-expense__date" date={date} onChange={setDate} />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="payer" className="text-right">
+          <Label htmlFor="new-expense__by" className="text-right">
             By
           </Label>
           <ExpensePayerSelect
+            id="new-expense__by"
             members={members}
             value={by}
             onValueChange={setBy}
@@ -162,9 +173,7 @@ export default function NewExpenseDialog({
           />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="for" className="text-right">
-            For
-          </Label>
+          <Label className="text-right">For</Label>
           <ScrollArea className="h-60 w-[280px] rounded-md border">
             <div className="p-4">
               {members.map((i, idx) => {
@@ -181,6 +190,7 @@ export default function NewExpenseDialog({
                 return (
                   <div
                     key={i.value}
+                    data-testid={"expense-for-select-option--" + i.value}
                     className={cn(
                       "flex items-center w-full h-6 gap-4 pt-5 pb-5 cursor-pointer",
                       hasSeperator && "border-b border-gray-200"
@@ -222,7 +232,12 @@ export default function NewExpenseDialog({
         </div>
       </div>
       <DialogFooter>
-        <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          data-testid="create-new-expense"
+        >
           {isSubmitting ? "..." : "Create"}
         </Button>
       </DialogFooter>

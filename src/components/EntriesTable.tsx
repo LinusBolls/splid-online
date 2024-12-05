@@ -70,13 +70,14 @@ export const getColumns = (
   }[],
   groupInfo: EntriesTableGroupInfo,
   saveEntries: (entries: ViewEntry[]) => void,
-  onDuplicateEntry: (entry: ViewEntry) => void,
-  onDeleteEntry: (entry: ViewEntry) => void
+  onDuplicateEntries: (entry: ViewEntry[]) => void,
+  onDeleteEntries: (entry: ViewEntry[]) => void
 ): ColumnDef<ViewEntry>[] => [
   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
+        data-testid="select-all-rows"
         checked={
           table.getIsAllPageRowsSelected() ||
           (table.getIsSomePageRowsSelected() && "indeterminate")
@@ -87,6 +88,7 @@ export const getColumns = (
     ),
     cell: ({ row }) => (
       <Checkbox
+        data-testid="select-row"
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
@@ -332,17 +334,27 @@ export const getColumns = (
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              data-testid="open-entry-actions"
+            >
               <span className="sr-only">Open menu</span>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onDuplicateEntry(row.original)}>
+            <DropdownMenuItem
+              data-testid="duplicate-entry"
+              onClick={() => onDuplicateEntries([row.original])}
+            >
               <Copy />
               Duplicate
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDeleteEntry(row.original)}>
+            <DropdownMenuItem
+              data-testid="delete-entry"
+              onClick={() => onDeleteEntries([row.original])}
+            >
               <Trash2 />
               Delete
             </DropdownMenuItem>
@@ -359,16 +371,16 @@ export function EntriesTable({
   groupInfo,
   saveEntries,
   onCreateExpense,
-  onDuplicateEntry,
-  onDeleteEntry,
+  onDuplicateEntries,
+  onDeleteEntries,
 }: {
   entries: ViewEntry[];
   members: SplidJs.Person[];
   groupInfo: EntriesTableGroupInfo;
   saveEntries: (entries: ViewEntry[]) => void;
   onCreateExpense: (expense: CreateExpenseInput) => void;
-  onDuplicateEntry: (entry: ViewEntry) => void;
-  onDeleteEntry: (entry: ViewEntry) => void;
+  onDuplicateEntries: (entry: ViewEntry[]) => void;
+  onDeleteEntries: (entry: ViewEntry[]) => void;
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -405,8 +417,8 @@ export function EntriesTable({
         processedMembers,
         groupInfo,
         saveEntries,
-        onDuplicateEntry,
-        onDeleteEntry
+        onDuplicateEntries,
+        onDeleteEntries
       ),
     [categories, processedMembers, groupInfo, saveEntries]
   );
@@ -449,6 +461,7 @@ export function EntriesTable({
           <Button
             variant="outline"
             onClick={() => setIsCreateExpenseOpen(true)}
+            data-testid="new-expense"
           >
             New expense
           </Button>
@@ -470,7 +483,19 @@ export function EntriesTable({
         </Dialog>
         <div className="flex gap-4">
           {table.getFilteredSelectedRowModel().rows.length > 0 && (
-            <Button variant="destructive">Delete</Button>
+            <Button
+              data-testid="delete-selected-entries"
+              variant="destructive"
+              onClick={() => {
+                const toBeDeleted = table
+                  .getFilteredSelectedRowModel()
+                  .rows.map((i) => i.original);
+
+                onDeleteEntries(toBeDeleted);
+              }}
+            >
+              Delete
+            </Button>
           )}
         </div>
         <DropdownMenu>

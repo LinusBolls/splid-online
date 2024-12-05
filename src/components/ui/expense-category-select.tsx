@@ -13,13 +13,16 @@ export default function ExpenseCategorySelect({
   categories,
   value,
   onValueChange,
+  ...rest
 }: {
   categories: ViewCategory[];
   value?: string;
   onValueChange: (value?: ViewCategory) => void;
+  id?: string;
 }) {
   return (
     <Select
+      {...rest}
       value={value ?? ""}
       onValueChange={(id) =>
         onValueChange(categories.find((i) => i.value === id))

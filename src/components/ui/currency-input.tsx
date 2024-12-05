@@ -31,6 +31,7 @@ export interface CurrencyInputProps {
   hasCurrencyPicker?: boolean;
 
   className?: string;
+  id?: string;
 }
 
 export function CurrencyInput({
@@ -43,6 +44,7 @@ export function CurrencyInput({
   errorMessage,
   hasCurrencyPicker = true,
   className,
+  ...rest
 }: CurrencyInputProps) {
   const hasError = !!errorMessage;
 
@@ -50,6 +52,7 @@ export function CurrencyInput({
     <div className={cn("flex flex-col w-[280px]", className)}>
       <div style={{ position: "relative" }}>
         <Input
+          {...rest}
           className={cn(
             "pr-9",
             hasError && "border-red-500 focus:ring-red-500"
@@ -95,7 +98,15 @@ export function CurrencyInput({
           </div>
         )}
       </div>
-      {hasError && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+      {hasError && (
+        <p
+          className="text-sm text-red-500 mt-1"
+          role="alert"
+          aria-live="polite"
+        >
+          {errorMessage}
+        </p>
+      )}
     </div>
   );
 }
