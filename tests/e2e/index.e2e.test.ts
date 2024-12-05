@@ -8,8 +8,7 @@ test("Home page loads correctly and joins a group", async () => {
 
   await page.goto("http://localhost:3000");
 
-  const pageTitle = await page.title();
-  expect(pageTitle).toBe("Splid");
+  expect(await page.title()).toBe("Splid");
 
   await page.waitForFunction(
     () => window.location.pathname === "/groups/join",
@@ -21,8 +20,6 @@ test("Home page loads correctly and joins a group", async () => {
 
   await page.waitForSelector("input");
 
-  page.focus("input");
-
   await page.type("input", code);
 
   await page.waitForNavigation({ waitUntil: "networkidle0" });
@@ -31,6 +28,5 @@ test("Home page loads correctly and joins a group", async () => {
     () => document.body.innerText.includes("🧪 Test Group"),
     { timeout: 5000 }
   );
-
   await browser.close();
 });

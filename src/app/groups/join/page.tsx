@@ -14,8 +14,6 @@ export default function Page() {
 
   const { saveGroup } = useSplidGroups();
 
-  console.log(code);
-
   const { group, groupInfo, members, entries } = useSplidGroup(code);
 
   useEffect(() => {

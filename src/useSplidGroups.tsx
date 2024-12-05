@@ -57,5 +57,9 @@ export default function useSplidGroups() {
       ])
     );
   }
-  return { groups, saveGroup };
+  return {
+    groups,
+    saveGroup,
+    groupsAreLoaded: typeof localStorage !== "undefined",
+  };
 }
