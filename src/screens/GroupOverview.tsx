@@ -22,6 +22,12 @@ export default function GroupOverviewScreen({
 }: GroupOverviewScreenProps) {
   const splid = useSplid();
 
+  async function onEditExpense(entry: ViewEntry) {
+    await splid.entry.set(entry._raw);
+
+    refetchGroupData();
+  }
+
   async function onCreateExpense(entry: CreateExpenseInput) {
     await splid.entry.create({
       groupObjectId: groupInfo.group.objectId,
@@ -36,7 +42,7 @@ export default function GroupOverviewScreen({
           },
         },
       ],
-      primaryPayer: entry.by,
+      primaryPayer: entry.primaryPayer,
       category: entry.category
         ? {
             originalName: entry.category.title,
@@ -109,6 +115,7 @@ export default function GroupOverviewScreen({
           }}
           saveEntries={() => {}}
           onCreateExpense={() => {}}
+          onEditExpense={() => {}}
           onDeleteEntries={() => {}}
           onDuplicateEntries={() => {}}
         />
@@ -119,6 +126,7 @@ export default function GroupOverviewScreen({
           members={members}
           groupInfo={groupInfo}
           onCreateExpense={onCreateExpense}
+          onEditExpense={onEditExpense}
           onDeleteEntries={async (entries) => {
             for (const entry of entries) {
               entry.setIsDeleted(true);

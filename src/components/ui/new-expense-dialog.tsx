@@ -1,4 +1,4 @@
-import { ViewCategory } from "@/ViewEntry";
+import { ViewCategory, ViewEntry, ViewProfiteer } from "@/ViewEntry";
 import { Button } from "./button";
 import { CurrencyInput, CurrencyRates } from "./currency-input";
 import { DatePicker } from "./date-picker";
@@ -12,7 +12,7 @@ import ExpenseCategorySelect from "./expense-category-select";
 import ExpensePayerSelect from "./expense-payer-select";
 import { Input } from "./input";
 import { Label } from "./label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollArea } from "./scroll-area";
 import { Checkbox } from "./checkbox";
 import { ProfiteerInput } from "./entry-profiteers";
@@ -23,7 +23,7 @@ import { useProfiteers } from "../useProfiteers";
 export interface CreateExpenseInput {
   title: string;
   category?: ViewCategory;
-  by: string;
+  primaryPayer: string;
   amount: number;
   currencyCode: string;
   date?: Date;
@@ -35,7 +35,10 @@ export interface NewExpenseDialogProps {
   members: { value: string; name: string }[];
   defaultCurrencyCode: string;
   onClose: () => void;
-  onSubmit: (expense: CreateExpenseInput) => void;
+  onCreate: (expense: CreateExpenseInput) => void;
+  onEdit: (expense: ViewEntry) => void;
+
+  existingExpense?: ViewEntry;
 }
 export default function NewExpenseDialog({
   currencyRates,
@@ -43,18 +46,41 @@ export default function NewExpenseDialog({
   members,
   defaultCurrencyCode,
   onClose,
-  onSubmit,
+  onCreate,
+  onEdit,
+  existingExpense,
 }: NewExpenseDialogProps) {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<ViewCategory | undefined>(undefined);
-  const [by, setBy] = useState<string | undefined>(undefined);
-  const [amount, setAmount] = useState<number>(0);
-  const [currencyCode, setCurrencyCode] = useState<string>(defaultCurrencyCode);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  useEffect(() => {
+    if (existingExpense) {
+      setTitle(existingExpense.title!);
+      setCategory(existingExpense.category ?? undefined);
+      setPrimaryPayer(existingExpense.primaryPayer);
+      setAmount(existingExpense.amount);
+      setCurrencyCode(existingExpense.currencyCode);
+      setDate(existingExpense.purchasedDate ?? undefined);
+    }
+  }, [existingExpense]);
+
+  const [title, setTitle] = useState(existingExpense?.title ?? "");
+  const [category, setCategory] = useState<ViewCategory | undefined>(
+    existingExpense?.category ?? undefined
+  );
+  const [primaryPayer, setPrimaryPayer] = useState<string | undefined>(
+    existingExpense?.primaryPayer ?? undefined
+  );
+  const [amount, setAmount] = useState<number>(existingExpense?.amount ?? 0);
+  const [currencyCode, setCurrencyCode] = useState<string>(
+    existingExpense?.currencyCode ?? defaultCurrencyCode
+  );
+  const [date, setDate] = useState<Date | undefined>(
+    existingExpense?.purchasedDate ?? new Date()
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showValidation, setShowValidation] = useState(false);
+
+  const isNewExpense = existingExpense == null;
 
   const {
     profiteers,
@@ -62,14 +88,18 @@ export default function NewExpenseDialog({
     addProfiteer,
     setProfiteerPercentage,
     setProfiteerAmount,
-  } = useProfiteers(amount);
+  } = useProfiteers(amount, existingExpense?.for);
 
   const actualProfiteers = profiteers.length
     ? profiteers
-    : members.map((i) => ({ id: i.value, share: 1 / members.length }));
+    : members.map<ViewProfiteer>((i) => ({
+        id: i.value,
+        share: 1 / members.length,
+        amount: amount * (1 / members.length),
+      }));
 
   const handleSubmit = async () => {
-    if (title && by && amount > 0) {
+    if (title && primaryPayer && amount > 0) {
       setIsSubmitting(true);
 
       try {
@@ -78,18 +108,42 @@ export default function NewExpenseDialog({
           {}
         );
 
-        await onSubmit({
-          title,
-          category,
-          by,
-          amount,
-          currencyCode,
-          date,
-          for: forRecord,
-        });
+        if (existingExpense) {
+          existingExpense.setTitle(title);
+          existingExpense.setPrimaryPayer(primaryPayer);
+          existingExpense.setCategory(category);
+          existingExpense.setAmount(amount);
+          existingExpense.setCurrency(
+            currencyCode,
+            currencyRates.reduce(
+              (acc, i) => ({ ...acc, [i.value]: i.factor }),
+              {}
+            )
+          );
+          existingExpense.setPurchasedDate(date);
+          // TODO: setItems method
+          existingExpense.setItems([
+            {
+              amount,
+              title,
+              profiteers: actualProfiteers,
+            },
+          ]);
+          await onEdit(existingExpense);
+        } else {
+          await onCreate({
+            title,
+            category,
+            primaryPayer,
+            amount,
+            currencyCode,
+            date,
+            for: forRecord,
+          });
+        }
         setTitle("");
         setCategory(undefined);
-        setBy(undefined);
+        setPrimaryPayer(undefined);
         setAmount(0);
         setCurrencyCode(defaultCurrencyCode);
         setDate(new Date());
@@ -108,7 +162,9 @@ export default function NewExpenseDialog({
   return (
     <DialogContent className="sm:max-w-[425px]" onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>New expense</DialogTitle>
+        <DialogTitle>
+          {isNewExpense ? "New expense" : "Edit expense"}
+        </DialogTitle>
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="grid grid-cols-4 items-center gap-4">
@@ -167,8 +223,8 @@ export default function NewExpenseDialog({
           <ExpensePayerSelect
             id="new-expense__by"
             members={members}
-            value={by}
-            onValueChange={setBy}
+            value={primaryPayer}
+            onValueChange={setPrimaryPayer}
             errorMessage={showValidation && title.length < 1 && "Required"}
           />
         </div>
@@ -212,10 +268,10 @@ export default function NewExpenseDialog({
                     </div>
                     {profits && (
                       <ProfiteerInput
-                        disabled={!isChecked}
+                        disabled={!isChecked || profiteers.length === 1}
                         totalAmount={amount}
                         percentage={profiteer.share}
-                        amount={amount * profiteer.share}
+                        amount={profiteer.amount}
                         onPercentageChange={(value) => {
                           setProfiteerPercentage(i.value, value);
                         }}
@@ -238,7 +294,7 @@ export default function NewExpenseDialog({
           disabled={isSubmitting}
           data-testid="create-new-expense"
         >
-          {isSubmitting ? "..." : "Create"}
+          {isSubmitting ? "..." : isNewExpense ? "Create" : "Save"}
         </Button>
       </DialogFooter>
     </DialogContent>

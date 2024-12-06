@@ -8,6 +8,7 @@ import useSplidGroup from "@/useSplidGroup";
 import useSplidGroups from "@/useSplidGroups";
 import { redirect } from "next/navigation";
 import { GroupHeader } from "@/components/GroupHeader";
+import { ExpenseDraftSync } from "@/stores/ExpenseDraftStoreUrlSync";
 
 export default function Page({
   params,
@@ -45,6 +46,7 @@ export default function Page({
 
   return (
     <div className="flex flex-col w-full min-h-screen">
+      <ExpenseDraftSync />
       <GroupHeader group={group} />
       <GroupOverviewScreen
         groupInfo={groupInfo}

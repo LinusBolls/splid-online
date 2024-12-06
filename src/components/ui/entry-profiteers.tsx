@@ -5,6 +5,10 @@ import { useCurrencyInput } from "../useCurrencyInput";
 import { useFullInputSelection } from "../useFullInputSelection";
 import { Input } from "./input";
 import { MAX_DISPLAYED_EXPENSE_PROFITEERS } from "@/constants";
+import { useProfiteers } from "../useProfiteers";
+import { Edit } from "lucide-react";
+import { Button } from "./button";
+import { useExpenseDraft } from "@/stores/expenseDraftStore";
 
 function SplidAvatar({
   initials,
@@ -46,17 +50,40 @@ export interface EntryProfiteersProps {
     value: string;
     color: { bg: string; fg: string };
   }[];
+  amount: number;
+  onChange?: (profiteers: ViewProfiteer[]) => void;
+  onEdit?: () => void;
 }
 export default function EntryProfiteers({
-  profiteers,
+  profiteers: profiteersProps,
   members,
+  amount,
+  onChange,
+  onEdit,
 }: EntryProfiteersProps) {
+  const {
+    profiteersChanged,
+    profiteers,
+    addProfiteer,
+    removeProfiteer,
+    setProfiteerAmount,
+    setProfiteerPercentage,
+  } = useProfiteers(amount, profiteersProps);
+
   const allProfit = profiteers.length === members.length;
 
   const isTruncated = profiteers.length > MAX_DISPLAYED_EXPENSE_PROFITEERS;
 
   return (
-    <HoverCard openDelay={0} closeDelay={0}>
+    <HoverCard
+      openDelay={0}
+      closeDelay={0}
+      onOpenChange={(open) => {
+        if (!open && profiteersChanged) {
+          onChange?.(profiteers);
+        }
+      }}
+    >
       <HoverCardTrigger className="flex items-center justify-center">
         {allProfit && <div className="whitespace-nowrap">Everyone</div>}
         {!allProfit && isTruncated && (
@@ -76,6 +103,10 @@ export default function EntryProfiteers({
               />
             );
           })}
+
+        <Button variant="ghost" onClick={onEdit}>
+          <Edit size={16} />
+        </Button>
       </HoverCardTrigger>
       <HoverCardContent className="flex flex-col w-72">
         {profiteers.map((i) => {
@@ -88,10 +119,14 @@ export default function EntryProfiteers({
                 {member?.name || "Unknown"}
               </div>
               <ProfiteerInput
+                disabled
+                totalAmount={amount}
                 percentage={i.share}
                 amount={i.amount}
-                onPercentageChange={() => {}}
-                onAmountChange={() => {}}
+                onPercentageChange={(value) =>
+                  setProfiteerPercentage(i.id, value)
+                }
+                onAmountChange={(value) => setProfiteerAmount(i.id, value)}
               />
             </div>
           );

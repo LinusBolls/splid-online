@@ -84,6 +84,13 @@ export class ViewEntry {
   public get primaryPayer(): string {
     return this._raw.primaryPayer;
   }
+  public get for(): ViewProfiteer[] {
+    return Object.entries(this._raw.items[0].P.P).map(([a, b]) => ({
+      id: a,
+      share: b,
+      amount: b * this._raw.items[0].AM,
+    }));
+  }
   public get secondaryPayers(): ViewSecondaryPayer[] | null {
     if (!this._raw.secondaryPayers) return null;
 
@@ -217,6 +224,26 @@ export class ViewEntry {
       },
     });
   }
+
+  public setItems(items: ViewEntryItem[]) {
+    this._raw.items = items.map((i) => {
+      const profiteers: Record<string, number> = {};
+
+      for (const profiteer of i.profiteers) {
+        profiteers[profiteer.id] = profiteer.share;
+      }
+
+      return {
+        T: i.title,
+        AM: i.amount,
+        P: {
+          P: profiteers,
+          PT: 0,
+        },
+      };
+    });
+  }
+
   public deleteSubItem(index: number) {
     this._raw.items = this._raw.items.filter((_, idx) => idx !== index);
     return this;

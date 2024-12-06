@@ -1,9 +1,21 @@
-import { useState } from "react";
+import { ViewProfiteer } from "@/ViewEntry";
+import { useEffect, useState } from "react";
 
-export function useProfiteers(totalAmount: number) {
-  const [profiteers, setProfiteers] = useState<{ id: string; share: number }[]>(
-    []
-  );
+interface Profiteer {
+  id: string;
+  share: number;
+}
+
+export function useProfiteers(
+  totalAmount: number,
+  initialProfiteers: Profiteer[] = []
+) {
+  const [profiteers, setProfiteers] = useState<Profiteer[]>(initialProfiteers);
+
+  useEffect(() => {
+    if (JSON.stringify(initialProfiteers) !== JSON.stringify(profiteers))
+      setProfiteers(initialProfiteers);
+  }, [initialProfiteers]);
 
   function removeProfiteer(id: string) {
     const profiteer = profiteers.find((j) => j.id === id);
@@ -75,8 +87,15 @@ export function useProfiteers(totalAmount: number) {
     );
   }
 
+  const profiteersChanged =
+    JSON.stringify(initialProfiteers) !== JSON.stringify(profiteers);
+
   return {
-    profiteers,
+    profiteersChanged,
+    profiteers: profiteers.map<ViewProfiteer>((i) => ({
+      ...i,
+      amount: totalAmount * i.share,
+    })),
     removeProfiteer,
     addProfiteer,
     setProfiteerPercentage,

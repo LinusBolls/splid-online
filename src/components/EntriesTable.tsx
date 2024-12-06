@@ -41,7 +41,12 @@ import {
 } from "./ui/table";
 import { SplidJs } from "splid-js";
 import { DatePicker } from "./ui/date-picker";
-import { ViewCategory, ViewEntry, ViewProfiteer } from "@/ViewEntry";
+import {
+  ViewCategory,
+  ViewEntry,
+  ViewEntryItem,
+  ViewProfiteer,
+} from "@/ViewEntry";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { format } from "date-fns";
 import { CurrencyInput } from "./ui/currency-input";
@@ -54,6 +59,7 @@ import ExpensePayerSelect from "./ui/expense-payer-select";
 import EntryProfiteers from "./ui/entry-profiteers";
 import { assignAvatarColors } from "./colors";
 import { MAX_EXPENSE_AMOUNT_EUR, NUM_ENTRY_TABLE_ROWS } from "@/constants";
+import { useExpenseDraft } from "@/stores/expenseDraftStore";
 
 type EntriesTableGroupInfo = Pick<
   SplidJs.GroupInfo,
@@ -263,8 +269,26 @@ export const getColumns = (
         []
       );
 
+      const { openEditExpenseModal } = useExpenseDraft();
+
       return (
-        <EntryProfiteers profiteers={uniqueProfiteers} members={members} />
+        <EntryProfiteers
+          profiteers={uniqueProfiteers}
+          members={members}
+          amount={row.original.amount}
+          onChange={async (profiteers) => {
+            alert("saved");
+            // const items = row.original.items.map((i) => ({
+            //   ...i,
+            //   profiteers: profiteers.filter((j) =>
+            //     i.profiteers.some((k) => k.id === j.id)
+            //   ),
+            // }));
+            // row.original.setItems(items);
+            // saveEntries([row.original]);
+          }}
+          onEdit={() => openEditExpenseModal(row.original.id)}
+        />
       );
     },
   },
@@ -371,6 +395,7 @@ export function EntriesTable({
   groupInfo,
   saveEntries,
   onCreateExpense,
+  onEditExpense,
   onDuplicateEntries,
   onDeleteEntries,
 }: {
@@ -379,6 +404,7 @@ export function EntriesTable({
   groupInfo: EntriesTableGroupInfo;
   saveEntries: (entries: ViewEntry[]) => void;
   onCreateExpense: (expense: CreateExpenseInput) => void;
+  onEditExpense: (expense: ViewEntry) => void;
   onDuplicateEntries: (entry: ViewEntry[]) => void;
   onDeleteEntries: (entry: ViewEntry[]) => void;
 }) {
@@ -426,6 +452,7 @@ export function EntriesTable({
   const table = useReactTable({
     data: entries,
     columns,
+
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -446,6 +473,8 @@ export function EntriesTable({
     },
   });
 
+  const { expenseBeingEditedId, closeEditExpenseModal } = useExpenseDraft();
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center py-4 gap-4">
@@ -457,7 +486,7 @@ export function EntriesTable({
           }
           className="max-w-sm"
         />
-        <Dialog open={isCreateExpenseOpen}>
+        <Dialog open={isCreateExpenseOpen || expenseBeingEditedId != null}>
           <Button
             variant="outline"
             onClick={() => setIsCreateExpenseOpen(true)}
@@ -466,7 +495,12 @@ export function EntriesTable({
             New expense
           </Button>
           <NewExpenseDialog
-            onClose={() => setIsCreateExpenseOpen(false)}
+            existingExpense={entries.find((i) => i.id === expenseBeingEditedId)}
+            onClose={() =>
+              expenseBeingEditedId
+                ? closeEditExpenseModal()
+                : setIsCreateExpenseOpen(false)
+            }
             members={processedMembers}
             categories={categories}
             defaultCurrencyCode={groupInfo.defaultCurrencyCode}
@@ -478,7 +512,8 @@ export function EntriesTable({
                 symbol: currency[value]?.symbol ?? "?",
               })
             )}
-            onSubmit={onCreateExpense}
+            onEdit={onEditExpense}
+            onCreate={onCreateExpense}
           />
         </Dialog>
         <div className="flex gap-4">

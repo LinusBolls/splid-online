@@ -23,8 +23,6 @@ export default function ExpensePayerSelect({
 }) {
   const hasError = !!errorMessage;
 
-  console.log(members);
-
   return (
     <div className="flex flex-col">
       <Select value={value} onValueChange={onValueChange} {...rest}>
