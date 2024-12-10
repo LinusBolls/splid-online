@@ -9,10 +9,7 @@ const PARAM_NAME = "expense";
 export const ExpenseDraftSync = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {
-    existingExpenseId,
-    actions: { setExistingExpenseId },
-  } = useExpenseDraftStore();
+  const { existingExpenseId } = useExpenseDraftStore();
 
   // useEffect(() => {
   //   const idFromUrl = searchParams.get("expenseId");

@@ -8,7 +8,6 @@ import { MAX_DISPLAYED_EXPENSE_PROFITEERS } from "@/constants";
 import { useProfiteers } from "../useProfiteers";
 import { Edit } from "lucide-react";
 import { Button } from "./button";
-import { useExpenseDraft } from "@/stores/expenseDraftStore";
 
 function SplidAvatar({
   initials,
@@ -64,8 +63,6 @@ export default function EntryProfiteers({
   const {
     profiteersChanged,
     profiteers,
-    addProfiteer,
-    removeProfiteer,
     setProfiteerAmount,
     setProfiteerPercentage,
   } = useProfiteers(amount, profiteersProps);

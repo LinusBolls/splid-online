@@ -41,12 +41,7 @@ import {
 } from "./ui/table";
 import { SplidJs } from "splid-js";
 import { DatePicker } from "./ui/date-picker";
-import {
-  ViewCategory,
-  ViewEntry,
-  ViewEntryItem,
-  ViewProfiteer,
-} from "@/ViewEntry";
+import { ViewCategory, ViewEntry, ViewProfiteer } from "@/ViewEntry";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { format } from "date-fns";
 import { CurrencyInput } from "./ui/currency-input";
@@ -269,6 +264,7 @@ export const getColumns = (
         []
       );
 
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const { openEditExpenseModal } = useExpenseDraft();
 
       return (
@@ -276,7 +272,7 @@ export const getColumns = (
           profiteers={uniqueProfiteers}
           members={members}
           amount={row.original.amount}
-          onChange={async (profiteers) => {
+          onChange={async () => {
             alert("saved");
             // const items = row.original.items.map((i) => ({
             //   ...i,
